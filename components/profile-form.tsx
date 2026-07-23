@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import type { BusinessProfile } from "@/lib/profile";
 import type { ProfileFormState } from "@/app/actions/profile";
+import { LLM_OPTIONS, DEFAULT_LLM, llmKey } from "@/lib/llm-options";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,6 +101,28 @@ export function ProfileForm({ action, initial, submitLabel }: ProfileFormProps) 
           defaultValue={initial?.good_lead_signals ?? ""}
           placeholder="Ex.: negócio sem site ou só com Instagram, mas com muitas avaliações"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="llm">Modelo de IA (personalização)</Label>
+        <select
+          id="llm"
+          name="llm"
+          defaultValue={llmKey(
+            initial?.llm_provider ?? DEFAULT_LLM.provider,
+            initial?.llm_model ?? DEFAULT_LLM.model,
+          )}
+          className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-3"
+        >
+          {LLM_OPTIONS.map((option) => (
+            <option key={llmKey(option.provider, option.model)} value={llmKey(option.provider, option.model)}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-muted-foreground text-xs">
+          Usado para gerar relevância, diagnóstico e mensagem de cada lead.
+        </p>
       </div>
 
       <Button type="submit" disabled={pending}>

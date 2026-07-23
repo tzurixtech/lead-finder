@@ -10,6 +10,8 @@ export interface BusinessProfile {
   price_range: string | null;
   tone_signature: string | null;
   good_lead_signals: string | null;
+  llm_provider: string | null;
+  llm_model: string | null;
   onboarding_done: boolean;
 }
 
@@ -22,6 +24,8 @@ export interface ProfileInput {
   price_range: string | null;
   tone_signature: string | null;
   good_lead_signals: string | null;
+  llm_provider: string | null;
+  llm_model: string | null;
 }
 
 /** Lê o perfil do usuário logado. Retorna null se ainda não existe. */
@@ -35,7 +39,7 @@ export async function getProfile(): Promise<BusinessProfile | null> {
   const { data } = await supabase
     .from("business_profiles")
     .select(
-      "user_id, business_name, what_you_sell, value_proposition, ideal_client, price_range, tone_signature, good_lead_signals, onboarding_done",
+      "user_id, business_name, what_you_sell, value_proposition, ideal_client, price_range, tone_signature, good_lead_signals, llm_provider, llm_model, onboarding_done",
     )
     .eq("user_id", user.id)
     .maybeSingle();

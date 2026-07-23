@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileInput } from "@/lib/profile";
+import { parseLlmKey } from "@/lib/llm-options";
 
 export interface ProfileFormState {
   error: string | null;
@@ -26,6 +27,8 @@ function readInput(formData: FormData): ProfileInput | null {
   const what_you_sell = String(formData.get("what_you_sell") ?? "").trim();
   const value_proposition = String(formData.get("value_proposition") ?? "").trim();
 
+  const llm = parseLlmKey(optional(formData.get("llm")));
+
   const input: ProfileInput = {
     business_name,
     what_you_sell,
@@ -34,6 +37,8 @@ function readInput(formData: FormData): ProfileInput | null {
     price_range: optional(formData.get("price_range")),
     tone_signature: optional(formData.get("tone_signature")),
     good_lead_signals: optional(formData.get("good_lead_signals")),
+    llm_provider: llm?.provider ?? null,
+    llm_model: llm?.model ?? null,
   };
 
   const missing = REQUIRED_FIELDS.some((field) => input[field] === "");

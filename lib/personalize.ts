@@ -1,14 +1,10 @@
 // lib/personalize.ts
 // Agente de Personalização (IA): combina o perfil do usuário com o lead para
 // gerar relevância + diagnóstico + 1ª mensagem, sob medida do que ELE vende.
-// SERVIDOR APENAS — usa a ANTHROPIC_API_KEY.
-import Anthropic from "@anthropic-ai/sdk";
-import { serverEnv } from "@/lib/env";
+// O provedor de IA (Anthropic/OpenAI/Gemini) vem da escolha do usuário.
+// SERVIDOR APENAS.
+import { generateJson, resolveLlmChoice } from "@/lib/llm";
 import type { BusinessProfile } from "@/lib/profile";
-
-// Modelo barato para rodar em batch (PROJECT.md 5.4: ~R$ 0,01–0,05 por lead).
-const MODEL = "claude-haiku-4-5";
-const MAX_TOKENS = 1024;
 
 export type Relevance = "ALTA" | "MEDIA" | "BAIXA";
 
@@ -29,7 +25,7 @@ export interface LeadForPersonalization {
   score: number | null;
 }
 
-const RESULT_SCHEMA = {
+const RESULT_SCHEMA: Record<string, unknown> = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -38,7 +34,7 @@ const RESULT_SCHEMA = {
     opening_message: { type: "string" },
   },
   required: ["relevance", "diagnosis", "opening_message"],
-} as const;
+};
 
 function buildSystemPrompt(profile: BusinessProfile): string {
   const lines = [
@@ -56,7 +52,7 @@ function buildSystemPrompt(profile: BusinessProfile): string {
     "com base no perfil acima — não apenas na presença digital.",
     "Gere um diagnóstico curto (2-3 pontos, citando os dados reais do lead) e uma mensagem",
     "de 1º contato no tom acima, oferecendo um diagnóstico/conversa gratuita, sem citar preço.",
-    "Escreva em português do Brasil.",
+    "Escreva em português do Brasil. Responda apenas com o JSON pedido.",
   );
   return lines.join("\n");
 }
@@ -86,22 +82,8 @@ export async function personalizeLead(
   profile: BusinessProfile,
   lead: LeadForPersonalization,
 ): Promise<PersonalizationResult> {
-  const client = new Anthropic({ apiKey: serverEnv.anthropicApiKey });
-
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: MAX_TOKENS,
-    system: buildSystemPrompt(profile),
-    output_config: { format: { type: "json_schema", schema: RESULT_SCHEMA } },
-    messages: [{ role: "user", content: buildLeadPrompt(lead) }],
-  });
-
-  const textBlock = response.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Resposta da IA sem conteúdo de texto.");
-  }
-
-  const parsed: unknown = JSON.parse(textBlock.text);
+  const choice = resolveLlmChoice(profile.llm_provider, profile.llm_model);
+  const parsed = await generateJson(choice, buildSystemPrompt(profile), buildLeadPrompt(lead), RESULT_SCHEMA);
   if (!isResult(parsed)) {
     throw new Error("Resposta da IA fora do formato esperado.");
   }

@@ -26,4 +26,10 @@ export const serverEnv = {
   get anthropicApiKey(): string {
     return required("ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY);
   },
+  get openaiApiKey(): string {
+    return required("OPENAI_API_KEY", process.env.OPENAI_API_KEY);
+  },
+  get geminiApiKey(): string {
+    return required("GEMINI_API_KEY", process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY);
+  },
 } as const;
