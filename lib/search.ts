@@ -42,10 +42,11 @@ function progressFromRow(row: SearchRow): SearchProgress {
   };
 }
 
-function toLeadRow(lead: ScoredLead, userId: string, searchId: string) {
+function toLeadRow(lead: ScoredLead, userId: string, searchId: string, city: string) {
   return {
     user_id: userId,
     search_id: searchId,
+    city,
     place_id: lead.placeId,
     name: lead.name,
     category: lead.category,
@@ -137,7 +138,7 @@ export async function advanceSearch(
 
   const rows = keep
     .filter((lead) => lead.placeId)
-    .map((lead) => toLeadRow(lead, search.user_id, search.id));
+    .map((lead) => toLeadRow(lead, search.user_id, search.id, search.city));
 
   let totalNew = 0;
   if (rows.length > 0) {
