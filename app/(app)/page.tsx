@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions/auth";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -15,11 +16,16 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-semibold">Tzurix LeadFinder</h1>
           <p className="text-muted-foreground text-sm">{user?.email}</p>
         </div>
-        <form action={signOut}>
-          <Button type="submit" variant="outline">
-            Sair
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          <Link href="/perfil" className={buttonVariants({ variant: "outline" })}>
+            Perfil
+          </Link>
+          <form action={signOut}>
+            <Button type="submit" variant="outline">
+              Sair
+            </Button>
+          </form>
+        </div>
       </header>
       <section className="text-muted-foreground rounded-lg border border-dashed p-10 text-center">
         Dashboard em construção. As próximas fases trarão perfil, buscas e leads.
