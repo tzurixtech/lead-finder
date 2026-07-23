@@ -78,6 +78,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Link href="/buscar" className={buttonVariants()}>
             Buscar leads
           </Link>
+          <Link href="/exclusoes" className={buttonVariants({ variant: "outline" })}>
+            Exclusões
+          </Link>
           <Link href="/perfil" className={buttonVariants({ variant: "outline" })}>
             Perfil
           </Link>

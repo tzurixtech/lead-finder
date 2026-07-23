@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateLeadMeta } from "@/app/actions/lead";
+import { excludeLead } from "@/app/actions/exclusion";
 import { LEAD_STAGES, type LeadRow } from "@/lib/leads";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,9 +38,17 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             {lead.category ?? "—"} · {lead.city ?? lead.neighborhood ?? "—"}
           </p>
         </div>
-        <Link href="/" className={buttonVariants({ variant: "outline" })}>
-          Voltar
-        </Link>
+        <div className="flex items-center gap-2">
+          <form action={excludeLead}>
+            <input type="hidden" name="id" value={lead.id} />
+            <Button type="submit" variant="destructive">
+              Não abordar
+            </Button>
+          </form>
+          <Link href="/" className={buttonVariants({ variant: "outline" })}>
+            Voltar
+          </Link>
+        </div>
       </header>
 
       <Card>
