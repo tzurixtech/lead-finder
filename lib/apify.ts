@@ -47,6 +47,7 @@ export interface StartedRun {
 export interface RunState {
   status: ApifyRunStatus;
   datasetId: string;
+  costUsd: number;
 }
 
 interface ApifyRunResponse {
@@ -54,6 +55,7 @@ interface ApifyRunResponse {
     id: string;
     status: ApifyRunStatus;
     defaultDatasetId: string;
+    usageTotalUsd?: number;
   };
 }
 
@@ -105,7 +107,11 @@ export async function getRunState(runId: string): Promise<RunState> {
     throw new Error(`Apify getRunState falhou: HTTP ${response.status}`);
   }
   const json = (await response.json()) as ApifyRunResponse;
-  return { status: json.data.status, datasetId: json.data.defaultDatasetId };
+  return {
+    status: json.data.status,
+    datasetId: json.data.defaultDatasetId,
+    costUsd: json.data.usageTotalUsd ?? 0,
+  };
 }
 
 /** Lê os itens do dataset já filtrados nos campos que usamos. */

@@ -17,6 +17,9 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground text-sm">{user?.email}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/buscar" className={buttonVariants()}>
+            Buscar leads
+          </Link>
           <Link href="/perfil" className={buttonVariants({ variant: "outline" })}>
             Perfil
           </Link>
