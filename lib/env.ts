@@ -23,4 +23,7 @@ export const serverEnv = {
   get apifyToken(): string {
     return required("APIFY_TOKEN", process.env.APIFY_TOKEN);
   },
+  get anthropicApiKey(): string {
+    return required("ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY);
+  },
 } as const;
