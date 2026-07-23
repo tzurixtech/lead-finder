@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/profile";
 import { personalizeLead, type LeadForPersonalization } from "@/lib/personalize";
+import { resolveLlmChoice } from "@/lib/llm-options";
+import { getUserApiKey } from "@/lib/keys";
 
 const LEAD_COLUMNS = "id, name, category, neighborhood, digital_label, rating, reviews_count, score";
 
@@ -26,8 +28,11 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
     return NextResponse.json({ error: "Lead não encontrado." }, { status: 404 });
   }
 
+  const choice = resolveLlmChoice(profile.llm_provider, profile.llm_model);
+  const userApiKey = await getUserApiKey(supabase, choice.provider);
+
   try {
-    const result = await personalizeLead(profile, lead as LeadForPersonalization);
+    const result = await personalizeLead(profile, lead as LeadForPersonalization, userApiKey);
 
     await supabase
       .from("leads")

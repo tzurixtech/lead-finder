@@ -77,13 +77,24 @@ function isResult(value: unknown): value is PersonalizationResult {
   );
 }
 
-/** Gera relevância + diagnóstico + mensagem para um lead, sob o perfil do usuário. */
+/**
+ * Gera relevância + diagnóstico + mensagem para um lead, sob o perfil do usuário.
+ * `userApiKey` é a chave própria do usuário (BYOK) para o provedor escolhido;
+ * null usa a chave do servidor.
+ */
 export async function personalizeLead(
   profile: BusinessProfile,
   lead: LeadForPersonalization,
+  userApiKey: string | null,
 ): Promise<PersonalizationResult> {
   const choice = resolveLlmChoice(profile.llm_provider, profile.llm_model);
-  const parsed = await generateJson(choice, buildSystemPrompt(profile), buildLeadPrompt(lead), RESULT_SCHEMA);
+  const parsed = await generateJson(
+    choice,
+    buildSystemPrompt(profile),
+    buildLeadPrompt(lead),
+    RESULT_SCHEMA,
+    userApiKey,
+  );
   if (!isResult(parsed)) {
     throw new Error("Resposta da IA fora do formato esperado.");
   }

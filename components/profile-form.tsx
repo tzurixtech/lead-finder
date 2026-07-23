@@ -4,7 +4,8 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import type { BusinessProfile } from "@/lib/profile";
 import type { ProfileFormState } from "@/app/actions/profile";
-import { LLM_OPTIONS, DEFAULT_LLM, llmKey } from "@/lib/llm-options";
+import type { KeyStatus } from "@/lib/keys";
+import { LLM_OPTIONS, DEFAULT_LLM, llmKey, type LlmProvider } from "@/lib/llm-options";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,12 +16,19 @@ type ProfileAction = (state: ProfileFormState, formData: FormData) => Promise<Pr
 interface ProfileFormProps {
   action: ProfileAction;
   initial: BusinessProfile | null;
+  keyStatus: KeyStatus;
   submitLabel: string;
 }
 
 const INITIAL_STATE: ProfileFormState = { error: null, saved: false };
 
-export function ProfileForm({ action, initial, submitLabel }: ProfileFormProps) {
+const PROVIDER_KEYS: ReadonlyArray<{ provider: LlmProvider; label: string }> = [
+  { provider: "anthropic", label: "Anthropic (Claude)" },
+  { provider: "openai", label: "OpenAI (GPT)" },
+  { provider: "google", label: "Google (Gemini)" },
+];
+
+export function ProfileForm({ action, initial, keyStatus, submitLabel }: ProfileFormProps) {
   const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
 
   useEffect(() => {
@@ -124,6 +132,35 @@ export function ProfileForm({ action, initial, submitLabel }: ProfileFormProps) 
           Usado para gerar relevância, diagnóstico e mensagem de cada lead.
         </p>
       </div>
+
+      <fieldset className="space-y-4 rounded-lg border p-4">
+        <legend className="px-1 text-sm font-medium">Suas chaves de API (opcional)</legend>
+        <p className="text-muted-foreground text-xs">
+          Informe a chave do provedor escolhido para usar a sua conta. Ficam cifradas e nunca são
+          exibidas de volta. Em branco, usa a chave do servidor (se houver).
+        </p>
+        {PROVIDER_KEYS.map(({ provider, label }) => {
+          const saved = keyStatus[provider];
+          return (
+            <div key={provider} className="space-y-2">
+              <Label htmlFor={`key_${provider}`}>{label}</Label>
+              <Input
+                id={`key_${provider}`}
+                name={`key_${provider}`}
+                type="password"
+                autoComplete="off"
+                placeholder={saved ? "•••••••• salva — deixe em branco para manter" : "cole sua chave"}
+              />
+              {saved && (
+                <label className="text-muted-foreground flex items-center gap-2 text-xs">
+                  <input type="checkbox" name={`remove_${provider}`} className="size-3.5" />
+                  Remover a chave salva
+                </label>
+              )}
+            </div>
+          );
+        })}
+      </fieldset>
 
       <Button type="submit" disabled={pending}>
         {pending ? "Salvando..." : submitLabel}

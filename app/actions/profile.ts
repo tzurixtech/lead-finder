@@ -2,9 +2,13 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileInput } from "@/lib/profile";
-import { parseLlmKey } from "@/lib/llm-options";
+import { parseLlmKey, type LlmProvider } from "@/lib/llm-options";
+import { saveUserApiKey, removeUserApiKey } from "@/lib/keys";
+
+const PROVIDERS: LlmProvider[] = ["anthropic", "openai", "google"];
 
 export interface ProfileFormState {
   error: string | null;
@@ -45,6 +49,27 @@ function readInput(formData: FormData): ProfileInput | null {
   return missing ? null : input;
 }
 
+/** Salva/remove as chaves de API que o usuário informou (BYOK). */
+async function processKeys(
+  supabase: SupabaseClient,
+  userId: string,
+  formData: FormData,
+): Promise<string | null> {
+  try {
+    for (const provider of PROVIDERS) {
+      if (formData.get(`remove_${provider}`) === "on") {
+        await removeUserApiKey(supabase, provider);
+        continue;
+      }
+      const value = optional(formData.get(`key_${provider}`));
+      if (value) await saveUserApiKey(supabase, userId, provider, value);
+    }
+    return null;
+  } catch {
+    return "Não foi possível salvar a chave de API. Verifique a configuração do servidor.";
+  }
+}
+
 /** Grava (upsert) o perfil do usuário e marca o onboarding como concluído. */
 async function saveProfile(formData: FormData): Promise<string | null> {
   const input = readInput(formData);
@@ -65,8 +90,9 @@ async function saveProfile(formData: FormData): Promise<string | null> {
     },
     { onConflict: "user_id" },
   );
+  if (error) return "Não foi possível salvar o perfil. Tente novamente.";
 
-  return error ? "Não foi possível salvar o perfil. Tente novamente." : null;
+  return processKeys(supabase, user.id, formData);
 }
 
 /** Onboarding: salva e libera o app. */

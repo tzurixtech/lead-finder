@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/profile";
+import { getKeyStatus } from "@/lib/keys";
+import { createClient } from "@/lib/supabase/server";
 import { updateProfile } from "@/app/actions/profile";
 import { ProfileForm } from "@/components/profile-form";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,6 +12,7 @@ export default async function PerfilPage() {
   if (!profile?.onboarding_done) {
     redirect("/onboarding");
   }
+  const keyStatus = await getKeyStatus(await createClient());
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 p-6">
@@ -22,7 +25,7 @@ export default async function PerfilPage() {
           Voltar
         </Link>
       </header>
-      <ProfileForm action={updateProfile} initial={profile} submitLabel="Salvar alterações" />
+      <ProfileForm action={updateProfile} initial={profile} keyStatus={keyStatus} submitLabel="Salvar alterações" />
     </main>
   );
 }
